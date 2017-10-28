@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import math
 
 from game import Agent
 
@@ -128,20 +129,127 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
+
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+
+        _num_agents = gameState.getNumAgents()
+
+        def max_value(state, depth):
+            if state.isWin() or state.isLose():
+                return state.getScore()
+
+            v = float("-inf") # current best score
+            current_action = None
+            actions = state.getLegalActions(self.index)
+
+            for a in actions:
+                current_score = min_value(state.generateSuccessor(self.index, a), depth, 1)
+                if current_score > v:
+                    v = current_score
+                    current_action = a
+
+            if depth == 0:
+                return current_action
+
+            return v
+
+
+
+        def min_value(state, depth, agent):
+            if state.isWin() or state.isLose():
+                return state.getScore()
+
+            v = float("inf") # current best score
+            actions = state.getLegalActions(agent)
+
+            for a in actions:
+                if agent + 1 == _num_agents: # checks if the agent is last in the list of agents then the next is pack man
+                    if depth == self.depth - 1:
+                        current_score = self.evaluationFunction(state.generateSuccessor(agent, a))
+                    else:
+                        current_score = max_value(state.generateSuccessor(agent, a), depth + 1)
+                else:
+                    current_score = min_value(state.generateSuccessor(agent, a), depth, agent + 1)
+
+                if current_score < v:
+                    v = current_score
+            return v
+
+
+        return max_value(gameState, 0)
+
+
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
     """
-
     def getAction(self, gameState):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # alpha is the biggest value encountered, and beta is the smallest.
+        _num_agents = gameState.getNumAgents()
+
+        def max_value(state, depth, alpha, beta):
+            if state.isWin() or state.isLose():
+                return state.getScore()
+
+            v = float("-inf") # current best score
+            current_action = None
+            actions = state.getLegalActions(self.index)
+
+            for a in actions:
+                current_score = min_value(state.generateSuccessor(self.index, a), depth, 1, alpha, beta)
+                if current_score > v:
+                    v = current_score
+                    current_action = a
+
+                if alpha < v:
+                    alpha = v
+
+                if v > beta:
+                    return v
+
+            if depth == 0:
+                return current_action
+
+            return v
+
+
+
+        def min_value(state, depth, agent, alpha, beta):
+            if state.isWin() or state.isLose():
+                return state.getScore()
+
+            v = float("inf") # current best score
+            actions = state.getLegalActions(agent)
+            for a in actions:
+                if agent + 1 == _num_agents: # checks if the agent is last in the list of agents then the next is pack man
+                    if depth == self.depth - 1:
+                        current_score = self.evaluationFunction(state.generateSuccessor(agent, a))
+                    else:
+                        current_score = max_value(state.generateSuccessor(agent, a), depth + 1, alpha, beta)
+                else:
+                    current_score = min_value(state.generateSuccessor(agent, a), depth, agent + 1, alpha, beta)
+
+                if current_score < v:
+                    v = current_score
+
+                if beta > v:
+                    beta = v
+
+                if v < alpha:
+                    return v
+
+            return v
+
+
+        return max_value(gameState, 0, float("-inf"), float("inf"))
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
